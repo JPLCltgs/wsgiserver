@@ -1,7 +1,7 @@
 """A high-speed, production ready, thread pooled, generic WSGI server.
 
-Copyright (c) 2016, Florent Gallaire (fgallaire@gmail.com)
-Copyright (c) 2004-2016, CherryPy Team (team@cherrypy.org)
+Copyright (c) 2016-2018, Florent Gallaire <f@gallai.re>
+Copyright (c) 2004-2016, CherryPy Team <team@cherrypy.org>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as
@@ -68,10 +68,7 @@ __all__ = ['HTTPRequest', 'HTTPConnection', 'HTTPServer',
            'socket_errors_to_ignore']
 
 import os
-try:
-    import queue
-except:
-    import Queue as queue
+import queue
 import re
 import email.utils
 import socket
@@ -79,11 +76,7 @@ import sys
 import threading
 import time
 import traceback as traceback_
-try:
-    from urllib.parse import unquote_to_bytes, urlparse
-except ImportError:
-    from urlparse import unquote as unquote_to_bytes
-    from urlparse import urlparse
+from urllib.parse import unquote_to_bytes, urlparse
 import errno
 import logging
 
@@ -94,10 +87,6 @@ except ImportError:
     # Python 2.6
     import io
 
-try:
-    import pkg_resources
-except ImportError:
-    pass
 
 if 'win' in sys.platform and hasattr(socket, "AF_INET6"):
     if not hasattr(socket, 'IPPROTO_IPV6'):
@@ -115,6 +104,7 @@ if PY3:
     string_types = str,
     text_type = str
     binary_type = bytes
+
     def ntob(n, encoding='ISO-8859-1'):
         """Return the given native string as a byte string in the given
         encoding.
@@ -125,9 +115,10 @@ if PY3:
     def bton(b, encoding='ISO-8859-1'):
         return b.decode(encoding)
 else:
-    string_types = basestring,
-    text_type = unicode
+    string_types = str,
+    text_type = str
     binary_type = str
+
     def ntob(n, encoding='ISO-8859-1'):
         """Return the given native string as a byte string in the given
         encoding.
@@ -166,6 +157,7 @@ def plat_specific_errors(*errnames):
     nums = [getattr(errno, k) for k in errnames if k in errno_names]
     # de-dupe the list
     return list(dict.fromkeys(nums).keys())
+
 
 socket_error_eintr = plat_specific_errors("EINTR", "WSAEINTR")
 
@@ -422,7 +414,7 @@ class ChunkedRFile(object):
             self.closed = True
             return
 
-##            if line: chunk_extension = line[0]
+        # if line: chunk_extension = line[0]
 
         if self.maxlen and self.bytes_read + chunk_size > self.maxlen:
             raise IOError("Request Entity Too Large")
@@ -1136,7 +1128,7 @@ class CP_makefile_PY2(getattr(socket, '_fileobject', object)):
                     buf.write(data)
                     buf_len += n
                     del data  # explicit free
-                    #assert buf_len == buf.tell()
+                    # assert buf_len == buf.tell()
                 return buf.getvalue()
 
         def readline(self, size=-1):
@@ -1226,7 +1218,7 @@ class CP_makefile_PY2(getattr(socket, '_fileobject', object)):
                         break
                     buf.write(data)
                     buf_len += n
-                    #assert buf_len == buf.tell()
+                    # assert buf_len == buf.tell()
                 return buf.getvalue()
     else:
         def read(self, size=-1):
@@ -1492,6 +1484,8 @@ class TrueyZero(object):
 
     def __radd__(self, other):
         return other
+
+
 trueyzero = TrueyZero()
 
 
@@ -1593,7 +1587,7 @@ class ThreadPool(object):
     """
 
     def __init__(self, server, min=10, max=-1,
-        accepted_queue_size=-1, accepted_queue_timeout=10):
+                 accepted_queue_size=-1, accepted_queue_timeout=10):
         self.server = server
         self.min = min
         self.max = max
@@ -1751,7 +1745,8 @@ except ImportError:
 
 class SSLAdapter(object):
 
-    """A wrapper for integrating Python's builtin ssl module with WSGIServer."""
+    """A wrapper for integrating Python's builtin
+       ssl module with WSGIServer."""
 
     certificate = None
     """The filename of the server SSL certificate."""
@@ -1788,11 +1783,13 @@ class SSLAdapter(object):
         """Wrap and return the given socket, plus WSGI environ entries."""
         try:
             if self.context is not None:
-                s = self.context.wrap_socket(sock,do_handshake_on_connect=True,
+                s = self.context.wrap_socket(sock,
+                                             do_handshake_on_connect=True,
                                              server_side=True)
             else:
                 s = ssl.wrap_socket(sock, do_handshake_on_connect=True,
-                                    server_side=True, certfile=self.certificate,
+                                    server_side=True,
+                                    certfile=self.certificate,
                                     keyfile=self.private_key,
                                     ssl_version=ssl.PROTOCOL_SSLv23,
                                     ca_certs=self.certificate_chain)
@@ -2008,13 +2005,13 @@ class HTTPServer(object):
             # So we can reuse the socket...
             try:
                 os.unlink(self.bind_addr)
-            except:
+            except Exception:
                 pass
 
             # So everyone can access the socket...
             try:
                 os.chmod(self.bind_addr, 0o777)
-            except:
+            except Exception:
                 pass
 
             info = [
@@ -2066,7 +2063,7 @@ class HTTPServer(object):
                 self.tick()
             except (KeyboardInterrupt, SystemExit):
                 self.stop()
-            except:
+            except Exception:
                 self.error_log("Error in HTTPServer.tick", level=logging.ERROR,
                                traceback=True)
 
@@ -2274,7 +2271,7 @@ class Gateway(object):
 
     def respond(self):
         """Process the current request. Must be overridden in a subclass."""
-        raise NotImplemented
+        raise NotImplementedError
 
 # ------------------------------- WSGI Stuff -------------------------------- #
 
@@ -2291,9 +2288,11 @@ class WSGIServer(HTTPServer):
                  shutdown_timeout=5, accepted_queue_size=-1,
                  accepted_queue_timeout=10, certfile=None, keyfile=None,
                  ca_certs=None):
+        aqs = accepted_queue_size
+        aqt = accepted_queue_timeout
         self.requests = ThreadPool(self, min=numthreads or 1, max=max,
-            accepted_queue_size=accepted_queue_size,
-            accepted_queue_timeout=accepted_queue_timeout)
+                                   accepted_queue_size=aqs,
+                                   accepted_queue_timeout=aqt)
         self.wsgi_app = wsgi_app
         self.gateway = wsgi_gateways[self.wsgi_version]
 
@@ -2329,7 +2328,7 @@ class WSGIGateway(Gateway):
 
     def get_environ(self):
         """Return a new environ dict targeting the given wsgi.version"""
-        raise NotImplemented
+        raise NotImplementedError
 
     def respond(self):
         """Process the current request."""
@@ -2560,8 +2559,10 @@ class WSGIPathInfoDispatcher(object):
             pass
 
         # Sort the apps by len(path), descending
-        by_path_len = lambda app: len(app[0])
-        apps.sort(key=by_path_len, reverse=True)
+        def ssss(app):
+            return len(app[0])
+        # by_path_len = lambda app: len(app[0])
+        apps.sort(key=ssss, reverse=True)
 
         # The path_prefix strings must start, but not end, with a slash.
         # Use "" instead of "/".

@@ -4,9 +4,9 @@ from wsgiserver import __version__ as version
 setup(name='WSGIserver',
       version=version,
       description='A high-speed, production ready, thread pooled, generic WSGI server with SSL support',
-      author='Florent Gallaire',
-      author_email='fgallaire@gmail.com',
-      url='http://fgallaire.github.io/wsgiserver',
+      author='horribleperson',
+      author_email='commit-git@outlook.com',
+      url='http://gitlab.com/horribleperson/wsgiserver',
       license='GNU LGPLv3+',
       keywords='wsgi server',
       classifiers=[
@@ -29,6 +29,8 @@ setup(name='WSGIserver',
           "Programming Language :: Python :: 3.3",
           "Programming Language :: Python :: 3.4",
           "Programming Language :: Python :: 3.5",
+          "Programming Language :: Python :: 3.6",
+          "Programming Language :: Python :: 3.7"
       ],
       py_modules=['wsgiserver'],
       )
