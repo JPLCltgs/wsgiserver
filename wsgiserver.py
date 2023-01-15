@@ -55,7 +55,7 @@ number of requests and their responses, so we run a nested loop::
                     return
 """
 
-__version__ = '1.3'
+__version__ = '1.3.1'
 
 __all__ = ['HTTPRequest', 'HTTPConnection', 'HTTPServer',
            'SizeCheckWrapper', 'KnownLengthRFile', 'ChunkedRFile',
@@ -2064,8 +2064,7 @@ class HTTPServer(object):
             except (KeyboardInterrupt, SystemExit):
                 self.stop()
             except Exception:
-                self.error_log("Error in HTTPServer.tick", level=logging.ERROR,
-                               traceback=True)
+                pass
 
             if self.interrupt:
                 while self.interrupt is True:
